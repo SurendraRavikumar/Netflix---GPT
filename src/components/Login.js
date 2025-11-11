@@ -1,13 +1,18 @@
 import React, { useRef, useState } from 'react'
 import Header from './Header'
 import { checkValidData, checkValidSignUpData } from '../utils/validate';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from '../utils/firebase';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addUser } from '../utils/userSlice'
 
 
 const Login = () => {
     const [isSignInForm, setIsSignInForm] = useState(true);
     const [errorMessage, seterrorMessage] = useState(null);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     // Here, I am using the useRef Hook to get a reference to the values of the email and password inputs.
     const email = useRef(null);
@@ -41,12 +46,25 @@ const Login = () => {
                 .then((userCredential) => {
                     // Signed up 
                     const user = userCredential.user;
-                    console.log(user);
+                    // Once the Sign up is done and user is created we have to update the User Profile.
+                    updateProfile(user, {
+                        displayName: name.current.value, photoURL: "https://png.pngtree.com/png-clipart/20230927/original/pngtree-man-avatar-image-for-profile-png-image_13001877.png"
+                    }).then(() => {
+                        // Profile updated!
+                        // Once after User profile is updated we have to update the Redux store.So, tat display name and photoURL get upadted to Redux store.
+                        const { uid, email, displayName, photoURL } = auth.currentUser; //destructring all the user details
+                        dispatch(addUser({ uid: uid, email: email, displayName: displayName, photoURL: photoURL }));
+                        // Once after User is Signed UP we have to navigate to Browser page.
+                        navigate("/browse");
+                    }).catch((error) => {
+                        seterrorMessage(error.message);
+                    });
+
                 })
                 .catch((error) => {
                     const errorCode = error.code;
                     const errorMessage = error.message;
-                    seterrorMessage(errorCode + "-" + errorMessage);  // Here concatinating both error code and error message
+                    seterrorMessage(errorCode + "-" + errorMessage);  // Here we are consoling if any error while Signing UP
                 });
         } else {
             // Sign In Logic
@@ -55,11 +73,14 @@ const Login = () => {
                     // Signed in 
                     const user = userCredential.user;
                     console.log(user);
+                    // Once after User is Signed IN we have to navigate to Browser page.
+                    navigate("/browse");
+
                 })
                 .catch((error) => {
                     const errorCode = error.code;
                     const errorMessage = error.message;
-                    seterrorMessage(errorCode + "-" + errorMessage);
+                    seterrorMessage(errorCode + "-" + errorMessage);   // Here we are consoling if any error while Signing IN
                 });
         }
     }
