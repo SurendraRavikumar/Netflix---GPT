@@ -3,18 +3,18 @@ import Header from './Header'
 import { checkValidData, checkValidSignUpData } from '../utils/validate';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from '../utils/firebase';
-import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addUser } from '../utils/userSlice'
+import { USER_AVATAR } from '../utils/constants';
 
 
 const Login = () => {
     const [isSignInForm, setIsSignInForm] = useState(true);
     const [errorMessage, seterrorMessage] = useState(null);
-    const navigate = useNavigate();
+
     const dispatch = useDispatch();
 
-    // Here, I am using the useRef Hook to get a reference to the values of the email and password inputs.
+    // I’m using the useRef Hook to obtain references to the name,email and password input elements and their values.
     const email = useRef(null);
     const password = useRef(null);
     const name = useRef(null);
@@ -42,20 +42,20 @@ const Login = () => {
         // Only when the message is "null" should we allow the user to sign in or sign up.   i.e)if(!message){Sign IN / Sign Up}
         if (!isSignInForm) {
             // Sign Up Logic
+            // Here, I’m using the "createUserWithEmailAndPassword" function from "firebase/auth" to create a new user.
             createUserWithEmailAndPassword(auth, email.current.value, password.current.value)
                 .then((userCredential) => {
                     // Signed up 
                     const user = userCredential.user;
-                    // Once the Sign up is done and user is created we have to update the User Profile.
+                    // After the sign-up process is complete and the user is created, we need to update their profile.
+                    // Here, I’m using the "updateProfile" function from "firebase/auth" to update the User profile.
                     updateProfile(user, {
-                        displayName: name.current.value, photoURL: "https://png.pngtree.com/png-clipart/20230927/original/pngtree-man-avatar-image-for-profile-png-image_13001877.png"
+                        displayName: name.current.value, photoURL: USER_AVATAR
                     }).then(() => {
                         // Profile updated!
-                        // Once after User profile is updated we have to update the Redux store.So, tat display name and photoURL get upadted to Redux store.
-                        const { uid, email, displayName, photoURL } = auth.currentUser; //destructring all the user details
+                        // After the user profile is updated, we need to update the Redux store so that the display name and photoURL are reflected there as well.
+                        const { uid, email, displayName, photoURL } = auth.currentUser; // Destructuring all the user details.
                         dispatch(addUser({ uid: uid, email: email, displayName: displayName, photoURL: photoURL }));
-                        // Once after User is Signed UP we have to navigate to Browser page.
-                        navigate("/browse");
                     }).catch((error) => {
                         seterrorMessage(error.message);
                     });
@@ -64,18 +64,15 @@ const Login = () => {
                 .catch((error) => {
                     const errorCode = error.code;
                     const errorMessage = error.message;
-                    seterrorMessage(errorCode + "-" + errorMessage);  // Here we are consoling if any error while Signing UP
+                    seterrorMessage(errorCode + "-" + errorMessage);  // Here, i am logging any errors that occur during the sign-up process
                 });
         } else {
             // Sign In Logic
+            // Here, I’m using the "signInWithEmailAndPassword" function from "firebase/auth" for user sign in/ Login.
             signInWithEmailAndPassword(auth, email.current.value, password.current.value)
                 .then((userCredential) => {
                     // Signed in 
                     const user = userCredential.user;
-                    console.log(user);
-                    // Once after User is Signed IN we have to navigate to Browser page.
-                    navigate("/browse");
-
                 })
                 .catch((error) => {
                     const errorCode = error.code;
@@ -86,7 +83,7 @@ const Login = () => {
     }
 
 
-    // Function to toggle between the Sign In and Sign Up forms.
+    // Function to switch between the Sign In and Sign Up forms.
     const toggleSignInForm = () => {
         setIsSignInForm(!isSignInForm);
     }
