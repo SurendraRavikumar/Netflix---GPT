@@ -5,13 +5,17 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { addUser, removeUser } from '../utils/userSlice';
 import { useDispatch } from 'react-redux'
-import { LOGO } from '../utils/constants';
+import { LOGO, SUPPORTED_LANGUAGE } from '../utils/constants';
+import { toggleGptSearchView } from '../utils/gptSlice';
+import { changelanguage } from '../utils/configSlice';
 
 const Header = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector(store => store.user); // Here, we are accessing or subscribing to the store.
+  const showGptSearch = useSelector(store => store.gpt.showGptSearch); // Here, we are accessing or subscribing to the store.
+
 
 
   // Function to handle user sign-out.
@@ -59,6 +63,18 @@ const Header = () => {
     return () => unsubscribe();
   }, []);
 
+  // Function to handle GPT Search Button click
+  const handleGptSearchClick = () => {
+    dispatch(toggleGptSearchView());
+  }
+
+  // Function to handle Language Change 
+  const handleLanguageChange = (e) => {
+    // Here "e.target.value" gives the language which one we are selecting.
+    //console.log(e.target.value);
+    dispatch(changelanguage(e.target.value))
+  }
+
 
   return (
     <div className='absolute w-screen px-8 py-2 bg-gradient-to-b from-black z-10 flex justify-between'>
@@ -69,6 +85,12 @@ const Header = () => {
 
       {/* This div should only be displayed when the user is signed in or signed up */}
       {user && <div className='flex p-2'>
+        {showGptSearch && (
+          <select className='p-2 m-2 bg-gray-900 text-white' onChange={handleLanguageChange}>
+            {SUPPORTED_LANGUAGE.map(lang => <option key={lang.identifier} value={lang.identifier}>{lang.name}</option>)}
+          </select>
+        )}
+        <button className='py-2 px-4 mx-4 my-2 bg-purple-800 text-white rounded-lg' onClick={handleGptSearchClick}> {showGptSearch ?"Home":"GPT Search"}</button>
         <img alt='usericon' className="w-12 h-12" src={user?.photoURL} />
         <button className='text-white font-bold' onClick={handleSignOut}> (Sign Out) </button>
       </div>}
